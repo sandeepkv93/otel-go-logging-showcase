@@ -83,8 +83,10 @@ func (h *traceContextHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 func (h *traceContextHandler) WithGroup(name string) slog.Handler {
     return &traceContextHandler{next: h.next.WithGroup(name)}
 }
+type LoggerProvider = sdklog.LoggerProvider
 
-func InitLogger(cfg config.Config, lp *sdklog.LoggerProvider) *slog.Logger {
+
+func InitLogger(cfg config.Config, lp *LoggerProvider) *slog.Logger {
     stdout := slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{Level: cfg.LogLevel})
     if !cfg.LogsEnabled || lp == nil {
         return slog.New(&traceContextHandler{next: stdout})
@@ -93,7 +95,7 @@ func InitLogger(cfg config.Config, lp *sdklog.LoggerProvider) *slog.Logger {
     return slog.New(&traceContextHandler{next: &multiHandler{handlers: []slog.Handler{stdout, otelHandler}}})
 }
 
-func InitLogProvider(ctx context.Context, cfg config.Config, res *sdkresource.Resource) (*sdklog.LoggerProvider, error) {
+func InitLogProvider(ctx context.Context, cfg config.Config, res *sdkresource.Resource) (*LoggerProvider, error) {
     opts := []otlploggrpc.Option{otlploggrpc.WithEndpoint(cfg.Endpoint)}
     if cfg.Insecure {
         opts = append(opts, otlploggrpc.WithInsecure())
